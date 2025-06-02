@@ -53,7 +53,3 @@ url = "theses.fr/s339344",
 
 DOI ZENODO
 
-
-### Use cases....
-
-1. Lo Feudo, S., Han, Y., Cumunel, G., Hoult, R., Bertholet, A., Garnier, D., Candeias, P., Correia, A.A. and Pacheco de Almeida, J. (2025), Video Tracking of Targets for Vibration Measurement of Large-Scale Structures Under Seismic Excitation. Earthquake Engng Struct Dyn., 54: 2106-2120. https://doi.org/10.1002/eqe.4353
