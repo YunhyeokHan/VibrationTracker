@@ -51,5 +51,18 @@ url = "theses.fr/s339344",
 }
 ```
 
-DOI ZENODO
-
+```
+@software{Han_VibrationTracker,
+  author       = {YunhyeokHan},
+  title        = {VibrationTracker: A Node-based framework for
+                   camera-based vibration measurement with DIC
+                   integration
+                  },
+  month        = jun,
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v1.0.0},
+  doi          = {10.5281/zenodo.15574376},
+  url          = {https://doi.org/10.5281/zenodo.15574376},
+}
+```
