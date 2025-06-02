@@ -1,0 +1,20 @@
+# Byte-code
+__pycache__/
+*.py[cod]
+*.pdf
+*.zip
+*.bin
+*.ppt*
+
+# profiler
+*.Result
+
+# Distribution / packaging
+*.egg-info/
+build/
+
+# pdoc
+html/
+*.html
+*.dot
+

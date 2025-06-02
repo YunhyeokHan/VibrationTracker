@@ -1,0 +1,209 @@
+{
+    "id": 2226146290656,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2137378350512,
+            "title": "Import Images",
+            "pos_x": 337.7451171874998,
+            "pos_y": 106.81152343749994,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2137410764864,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {},
+            "op_code": 7
+        },
+        {
+            "id": 2137500415120,
+            "title": "Initialize Target",
+            "pos_x": 700.78125,
+            "pos_y": 329.171875,
+            "inputs": [
+                {
+                    "id": 2137411064016,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137411064064,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2137410940592,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137410940640,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {},
+            "op_code": 9
+        },
+        {
+            "id": 2137410937616,
+            "title": "Track Target",
+            "pos_x": 1163.015625,
+            "pos_y": 326.421875,
+            "inputs": [
+                {
+                    "id": 2137411726592,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137411726640,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2137411788560,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2137411788608,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {},
+            "op_code": 10
+        },
+        {
+            "id": 2137378376096,
+            "title": "Calculate Displacement",
+            "pos_x": 1570.4687500000002,
+            "pos_y": 333.85937499999983,
+            "inputs": [
+                {
+                    "id": 2137433611088,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137433610752,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2137433610800,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137433610848,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2137433681056,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2137433681104,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {},
+            "op_code": 12
+        },
+        {
+            "id": 2503297078080,
+            "title": "Animate Vibration",
+            "pos_x": 1963.9062499999986,
+            "pos_y": 336.40624999999983,
+            "inputs": [
+                {
+                    "id": 2503296929168,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 16
+        }
+    ],
+    "edges": [
+        {
+            "id": 2137433681824,
+            "edge_type": 5,
+            "start": 2137410764864,
+            "end": 2137411064016
+        },
+        {
+            "id": 2137435101936,
+            "edge_type": 5,
+            "start": 2137410940592,
+            "end": 2137411788560
+        },
+        {
+            "id": 2137435186176,
+            "edge_type": 5,
+            "start": 2137410764864,
+            "end": 2137411726592
+        },
+        {
+            "id": 2137435044832,
+            "edge_type": 5,
+            "start": 2137411788608,
+            "end": 2137433611088
+        },
+        {
+            "id": 2503297077504,
+            "edge_type": 5,
+            "start": 2137433681056,
+            "end": 2503296929168
+        }
+    ]
+}

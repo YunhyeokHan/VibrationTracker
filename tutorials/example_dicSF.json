@@ -1,0 +1,205 @@
+{
+    "id": 2636412051072,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 1511192009984,
+            "title": "Process DIC",
+            "pos_x": 822.90625,
+            "pos_y": 267.03125,
+            "inputs": [
+                {
+                    "id": 1511959155280,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1511959155328,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1511959155376,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 1511959155424,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1511959155472,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1511959155520,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {},
+            "op_code": 14
+        },
+        {
+            "id": 1511959155232,
+            "title": "Preprocess DIC",
+            "pos_x": 517.9062500000001,
+            "pos_y": 268.03125,
+            "inputs": [
+                {
+                    "id": 1511972885648,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1511972885696,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1511972885744,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1511972885792,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {},
+            "op_code": 13
+        },
+        {
+            "id": 1511972885600,
+            "title": "Postprocess DIC",
+            "pos_x": 1138.90625,
+            "pos_y": 271.03125,
+            "inputs": [
+                {
+                    "id": 1511979099616,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1511979099664,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1511979099712,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 1511979099760,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                },
+                {
+                    "id": 1511979099808,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1511979099856,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {},
+            "op_code": 15
+        },
+        {
+            "id": 1511979099520,
+            "title": "Import Images",
+            "pos_x": 230.0,
+            "pos_y": 77.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 1511989807136,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {},
+            "op_code": 7
+        }
+    ],
+    "edges": [
+        {
+            "id": 1511989807088,
+            "edge_type": 5,
+            "start": 1511959155520,
+            "end": 1511979099712
+        },
+        {
+            "id": 1511989807184,
+            "edge_type": 5,
+            "start": 1511979099616,
+            "end": 1511989807136
+        },
+        {
+            "id": 1511989807232,
+            "edge_type": 5,
+            "start": 1511972885744,
+            "end": 1511959155376
+        },
+        {
+            "id": 1511989807376,
+            "edge_type": 5,
+            "start": 1511989807136,
+            "end": 1511972885648
+        },
+        {
+            "id": 1511989807520,
+            "edge_type": 5,
+            "start": 1511989807136,
+            "end": 1511959155280
+        }
+    ]
+}
