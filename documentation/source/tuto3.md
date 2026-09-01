@@ -15,7 +15,7 @@ This tutorial demonstrates how to measure full-field displacements using 2D Digi
 - **Target**: Speckle pattern applied to the specimen surface
 - **Data**: Sequence of deformation images (e.g., 6 images). All images are preprocessed to a resolution of 1920 x 1200 pixels.
 - **Folder**: `./images/dic2D/` contains all relevant images.
-- This dataset `dic2D` can be downloaded using repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15573703.svg)](https://doi.org/10.5281/zenodo.15573703)
+- This dataset `dic2D` can be downloaded using repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22232468.svg)](https://doi.org/10.5281/zenodo.22232468)
 
 ---
 

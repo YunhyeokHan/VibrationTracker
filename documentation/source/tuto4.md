@@ -16,7 +16,7 @@ This tutorial demonstrates the process of tracking targets on the beam using the
 4. Postprocess DIC
 
 
-Three examples are presented in this tutorial. The corresponding images can be downloaded from the repository  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15573703.svg)](https://doi.org/10.5281/zenodo.15573703)
+Three examples are presented in this tutorial. The corresponding images can be downloaded from the repository  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22232468.svg)](https://doi.org/10.5281/zenodo.22232468)
 - In monovision: 
 --Two images (reference and deformed) of a masonry bridge subjected to loading using a hydraulic cylinder, acquired with a 151 MPx Viework camera. These tests were carried out as part of Suzanne Leonard's PhD research (2024–2027): Residual bearing capacity of civil engineering masonry structures evaluation
 --Nine images of an aluminum tensile test specimen acquired at the Navier Laboratory.
