@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QPushButton, QGridLayout, QLabel, QWidget, QComboBox, QSpacerItem, QSizePolicy, QMessageBox
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton, QGridLayout, QLabel, QWidget, QComboBox, QSpacerItem, QSizePolicy, QMessageBox, QLineEdit
+from PyQt5.QtGui import QIntValidator
 from VibrationTracker.vib_conf import register_node, OP_NODE_INITIALIZETARGET
 from VibrationTracker.vib_node_base import VibNode, VibGraphicsNode
 from nodeeditor.node_content_widget import QDMNodeContentWidget
@@ -7,52 +7,58 @@ from nodeeditor.utils import dumpException
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-
 from VibrationTracker.module.target_initialization import *
 
 class VibInitializeTargetContent(QDMNodeContentWidget):
     def initUI(self):
         self.setStyleSheet(''' font-size: 14px; ''')
-
+    
         self.layout = QGridLayout()
         self.layout.setContentsMargins(10, 20, 10, 30)
-
+    
         self.layout.addWidget(QLabel(""), 0, 0)
-
+        
+        # --- output tag for box and folder ---
+        self.tagEdit = QLineEdit(self)
+        self.tagEdit.setPlaceholderText("Output name (ex: target_cam1)")
+        self.tagEdit.setText("target")
+        self.layout.addWidget(self.tagEdit, 0, 1, 1, 2)
+    
         self.inputLabel1 = QLabel("ImageNames")
         self.layout.addWidget(self.inputLabel1, 1, 0)
-        
-
+    
         self.inputLabel2 = QLabel("Calibration")
         self.layout.addWidget(self.inputLabel2, 2, 0)
-
+    
         spacer = QSpacerItem(80, 0, QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.layout.addItem(spacer, 1, 1, 1, 1)
-
-
+    
         self.outputLabel = QLabel("posTrack")
         self.layout.addWidget(self.outputLabel, 1, 2)
-        
-
+    
         self.layout.addWidget(QLabel(""), 4, 2)
-
+    
         self.layout.setSpacing(1)
         self.setLayout(self.layout)
 
+        
     def serialize(self):
         res = super().serialize()
-        # res['value'] = self.edit.text()
+        res["tag"] = self.tagEdit.text()
+        res["meshSize"] = self.node.configWidget.sizeWindow.text()
         return res
-
+    
     def deserialize(self, data, hashmap={}):
         res = super().deserialize(data, hashmap)
         try:
-            # value = data['value']
-            # self.edit.setText(value)
+            ms = str(data.get("meshSize", "69"))
+            self.node.configWidget.sizeWindow.setText(ms)
+            self.tagEdit.setText(data.get("tag", "target"))
             return True & res
         except Exception as e:
             dumpException(e)
         return res
+
 
 @register_node(OP_NODE_INITIALIZETARGET)
 class VibNode_InitializeTarget(VibNode):
@@ -63,6 +69,7 @@ class VibNode_InitializeTarget(VibNode):
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[1,2], outputs=[1,3])        
+
 
     def initInnerClasses(self):
         self.content = VibInitializeTargetContent(self)
@@ -114,9 +121,19 @@ class VibNode_InitializeTarget(VibNode):
     
         self.initializeTarget.filePath = filePath
         self.initializeTarget.calibPath = calibPath
+        
+        #force the meshsize to be odd
+        ms = int(self.configWidget.sizeWindow.text() or 69)
+        if ms % 2 == 0:
+            ms += 1
+            self.configWidget.sizeWindow.setText(str(ms))
+        
+        self.initializeTarget.meshSize = ms
         try:
         
-            self.initializeTarget.resultFolder = self.initializeTarget.createResultFolder(index=self.id)
+            tag = self.content.tagEdit.text().strip() or "target"
+            self.initializeTarget.resultFolder = self.initializeTarget.createResultFolder(index=f"{tag}_{self.id}")
+
         except:
             print("No result folder")
             return
@@ -147,7 +164,9 @@ class VibNode_InitializeTarget(VibNode):
             self.calibPath = '' 
 
         self.imagesNames = self.initializeTarget.readImageNamesFromJson(self.initializeTarget.filePath)
-        self.initializeTarget.resultFolder = self.initializeTarget.createResultFolder(index=self.id)
+        tag = self.content.tagEdit.text().strip() or "target"
+        self.initializeTarget.resultFolder = self.initializeTarget.createResultFolder(index=f"{tag}_{self.id}")
+
         self.outputName = os.path.join(self.initializeTarget.resultFolder, 'initializationResults.json')
 
         if os.path.isfile(self.outputName):
@@ -171,11 +190,21 @@ class VibNodeConfig_InitializeTarget(QWidget):
         
     def initUI(self):
         self.layout = QGridLayout()
-        self.layout.addWidget(QLabel("Configurations of target initializaton node"), 0, 0)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.layout.setSpacing(6)
+    
+        self.layout.addWidget(QLabel("Configurations of target initializaton node"), 0, 0, 1, 2)
+    
+        self.layout.addWidget(QLabel("Size of the window"), 1, 0)
+        self.sizeWindow = QLineEdit(self)
+        self.sizeWindow.setValidator(QIntValidator(3, 401, self))
+        self.sizeWindow.setText("69")
+        self.layout.addWidget(self.sizeWindow, 1, 1)
+    
         self.buttonRun = QPushButton("Run", self)
         self.layout.addWidget(self.buttonRun, 2, 0, 1, 2)
+    
         self.setLayout(self.layout)
-
 
     
 class VibNodeMain_InitializeTarget(QWidget):

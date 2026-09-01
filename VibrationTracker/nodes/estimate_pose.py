@@ -30,6 +30,12 @@ class VibEstimatePoseContent(QDMNodeContentWidget):
 
         # Add an empty label as a placeholder
         self.layout.addWidget(QLabel(""), 0, 0)
+        
+        # output tag (folder name) 
+        self.tagEdit = QLineEdit(self)
+        self.tagEdit.setPlaceholderText("Output name (ex: pose_cam1)")
+        self.tagEdit.setText("pose")  # valeur par défaut
+        self.layout.addWidget(self.tagEdit, 0, 1, 1, 2)
 
         # Input label for ImageNames
         self.inputLabel1 = QLabel("ImageNames")
@@ -61,8 +67,8 @@ class VibEstimatePoseContent(QDMNodeContentWidget):
         Serializes the node content and returns the dictionary containing data.
         """
         res = super().serialize()
+        res["tag"] = self.tagEdit.text()
         return res
-
     def deserialize(self, data, hashmap={}):
         """
         Deserializes the node content from the provided data.
@@ -70,12 +76,12 @@ class VibEstimatePoseContent(QDMNodeContentWidget):
         """
         res = super().deserialize(data, hashmap)
         try:
+            self.tagEdit.setText(data.get("tag", "pose"))
             return True & res
         except Exception as e:
             dumpException(e)
         return res
-
-
+    
 @register_node(OP_NODE_ESTIMATEPOSE)
 class VibNode_EstimatePose(VibNode):
     """
@@ -262,7 +268,10 @@ class VibNode_EstimatePose(VibNode):
         else:             
             self.estimatePose.calibrationPath = self.getInput(1).value
         
-        self.resultFolder = self.estimatePose.createResultFolder(index=self.id)
+        tag = self.content.tagEdit.text().strip() or "pose"
+        self.resultFolder = self.estimatePose.createResultFolder(index=f"{tag}_{self.id}")
+
+
         self.outputName = os.path.join(self.resultFolder, 'poseEstimationResults.json')
 
         print("Checking current state:", self.outputName)
