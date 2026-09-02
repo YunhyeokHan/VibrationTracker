@@ -14,7 +14,7 @@ class InitializeTarget(QMainWindow):
 
     def __init__(self, filePath=None, calibPath=None):
         super().__init__()
-    
+        self.meshSize = 29 
         self.setWindowTitle("Point Selection")
         self.setGeometry(100, 100, 800, 600)
         if filePath is not None:
@@ -152,14 +152,15 @@ class InitializeTarget(QMainWindow):
         if not os.path.exists(resultFolderPath):
             os.makedirs(resultFolderPath)
         return resultFolderPath
-    
+
     def saveInitializationResults(self, posTrack, resultFolderPath):
         self.outputName = os.path.join(resultFolderPath, 'initializationResults.json')
-        initializationResults = {"posTrack": posTrack.tolist()}
+        initializationResults = {"posTrack": posTrack.tolist(),"meshSize": int(self.meshSize)}
         with open(self.outputName, 'w') as f:
             json.dump(initializationResults, f)
         print("Initialization results saved in: ", self.outputName)
         return self.outputName
+
     
     def readInitializationResults(self, jsonPath):
         with open(jsonPath) as f:

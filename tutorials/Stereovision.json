@@ -1,0 +1,531 @@
+{
+    "id": 2636412051072,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2636434841024,
+            "title": "Import Images",
+            "pos_x": 42.91088867187497,
+            "pos_y": -149.82757568359384,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2636435127024,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "cam1"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 2636435126976,
+            "title": "Calibrate Camera",
+            "pos_x": 338.801513671875,
+            "pos_y": -140.8119506835938,
+            "inputs": [
+                {
+                    "id": 2636436867824,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2636436867872,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "calib_1"
+            },
+            "op_code": 8
+        },
+        {
+            "id": 2636436867920,
+            "title": "Estimate Pose",
+            "pos_x": 348.602294921875,
+            "pos_y": 30.234924316406193,
+            "inputs": [
+                {
+                    "id": 2636437162784,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2636437162832,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2636437162880,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2636437162928,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "tag": "pose_1"
+            },
+            "op_code": 11
+        },
+        {
+            "id": 2636550566624,
+            "title": "Import Images",
+            "pos_x": 839.6569824218748,
+            "pos_y": -226.06195068359347,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2636556130960,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "cam1"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 2636436752512,
+            "title": "Import Images",
+            "pos_x": 125.0061035156248,
+            "pos_y": 470.2758789062499,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2636434975712,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "cam2"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 2636596749456,
+            "title": "Estimate Pose",
+            "pos_x": 437.9006347656252,
+            "pos_y": 706.4438476562497,
+            "inputs": [
+                {
+                    "id": 2636628246480,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2636628299840,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2636628299888,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2636628299936,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "tag": "pose_2"
+            },
+            "op_code": 11
+        },
+        {
+            "id": 2636629107232,
+            "title": "Import Images",
+            "pos_x": 853.8029785156248,
+            "pos_y": 463.86962890624943,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2636629394768,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "cam2"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 2636629394720,
+            "title": "Calibrate Camera",
+            "pos_x": 413.70922851562506,
+            "pos_y": 499.99462890624943,
+            "inputs": [
+                {
+                    "id": 2636629692912,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2636629692960,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "calib_2"
+            },
+            "op_code": 8
+        },
+        {
+            "id": 3003406747104,
+            "title": "Import Images",
+            "pos_x": 50.0,
+            "pos_y": 37.50000000000006,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 3003406993584,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "cam1"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 3003408758768,
+            "title": "Preprocess DIC",
+            "pos_x": 730.2499999999998,
+            "pos_y": 162.21874999999997,
+            "inputs": [
+                {
+                    "id": 3003535616368,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 3003535616416,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 3003535616464,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 3003535616512,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "dicprep_1"
+            },
+            "op_code": 13
+        },
+        {
+            "id": 3003522990672,
+            "title": "Import Images",
+            "pos_x": 121.09375,
+            "pos_y": 685.5468749999998,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 3003543646368,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "cam2"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 1942463491808,
+            "title": "Process DIC",
+            "pos_x": 1126.25,
+            "pos_y": 119.59374999999994,
+            "inputs": [
+                {
+                    "id": 1942465063232,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1942465063280,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1942465063328,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 1942465063376,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1942465063424,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1942465063472,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "dic3d"
+            },
+            "op_code": 14
+        },
+        {
+            "id": 1733452751248,
+            "title": "Postprocess DIC",
+            "pos_x": 1424.5156250000005,
+            "pos_y": 138.09375000000003,
+            "inputs": [
+                {
+                    "id": 1733536703632,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1733536703680,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1733536703728,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 1733536703776,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                },
+                {
+                    "id": 1733536703824,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1733536703872,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "resultFolder": "C:\\Users\\julien.archez\\Documents\\python\\VibrationTracker-main\\tutorials\\example_stereovision - GM1\\DIC_postprocessing1733452751248"
+            },
+            "op_code": 15
+        }
+    ],
+    "edges": [
+        {
+            "id": 2636437163648,
+            "edge_type": 5,
+            "start": 2636435127024,
+            "end": 2636436867824
+        },
+        {
+            "id": 2636437163936,
+            "edge_type": 5,
+            "start": 2636436867872,
+            "end": 2636437162832
+        },
+        {
+            "id": 2636629693200,
+            "edge_type": 5,
+            "start": 2636629692960,
+            "end": 2636628299840
+        },
+        {
+            "id": 2636629693776,
+            "edge_type": 5,
+            "start": 2636434975712,
+            "end": 2636629692912
+        },
+        {
+            "id": 3003406385104,
+            "edge_type": 5,
+            "start": 3003406993584,
+            "end": 2636437162784
+        },
+        {
+            "id": 3003535616944,
+            "edge_type": 5,
+            "start": 2636556130960,
+            "end": 3003535616368
+        },
+        {
+            "id": 3003535616704,
+            "edge_type": 5,
+            "start": 2636436867872,
+            "end": 3003535616416
+        },
+        {
+            "id": 3003402569376,
+            "edge_type": 5,
+            "start": 3003543646368,
+            "end": 2636628246480
+        },
+        {
+            "id": 1942467045504,
+            "edge_type": 5,
+            "start": 2636436867872,
+            "end": 1942465063280
+        },
+        {
+            "id": 1942470529376,
+            "edge_type": 5,
+            "start": 2636556130960,
+            "end": 1942465063232
+        },
+        {
+            "id": 2343280126848,
+            "edge_type": 5,
+            "start": 2636629394768,
+            "end": 1942465063376
+        },
+        {
+            "id": 2343180469536,
+            "edge_type": 5,
+            "start": 2636629692960,
+            "end": 1942465063424
+        },
+        {
+            "id": 2260363344672,
+            "edge_type": 5,
+            "start": 3003535616464,
+            "end": 1942465063328
+        },
+        {
+            "id": 1733537106144,
+            "edge_type": 5,
+            "start": 1942465063472,
+            "end": 1733536703728
+        },
+        {
+            "id": 1733537121568,
+            "edge_type": 5,
+            "start": 2636436867872,
+            "end": 1733536703680
+        },
+        {
+            "id": 1733537121712,
+            "edge_type": 5,
+            "start": 2636437162880,
+            "end": 1733536703776
+        },
+        {
+            "id": 1733537124064,
+            "edge_type": 5,
+            "start": 2636628299888,
+            "end": 1733536703824
+        },
+        {
+            "id": 1733452819808,
+            "edge_type": 5,
+            "start": 2636556130960,
+            "end": 1733536703632
+        }
+    ]
+}

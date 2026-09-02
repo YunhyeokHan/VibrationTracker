@@ -7,8 +7,9 @@ from nodeeditor.node_content_widget import QDMNodeContentWidget, QDMTextEdit
 from nodeeditor.utils import dumpException
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from PyQt5.QtWidgets import QLineEdit
 import matplotlib.pyplot as plt
-
+import os
 from matplotlib.figure import Figure
 
 import cv2
@@ -45,6 +46,14 @@ class VibImportImagesContent(QDMNodeContentWidget):
 
         # Additional empty label for spacing
         self.layout.addWidget(QLabel(""))
+        
+        
+        # Champ tag
+        self.tagEdit = QLineEdit(self)
+        self.tagEdit.setPlaceholderText("Camera name (ex: cam1)")
+        self.tagEdit.setText("cam1")
+        self.layout.addWidget(self.tagEdit)
+        
 
         # Button to open the folder browser dialog
         self.buttonRun = QPushButton("Folder Browser", self)
@@ -56,6 +65,7 @@ class VibImportImagesContent(QDMNodeContentWidget):
         # Apply the layout to the widget
         self.setLayout(self.layout)
 
+
     def serialize(self):
         """
         Serializes the widget's state for saving or exporting.
@@ -64,6 +74,7 @@ class VibImportImagesContent(QDMNodeContentWidget):
             dict: A dictionary containing the serialized state of the widget.
         """
         res = super().serialize()
+        res["tag"] = self.tagEdit.text()
         # Future serialization of additional state can be added here
         return res
 
@@ -80,6 +91,7 @@ class VibImportImagesContent(QDMNodeContentWidget):
         """
         res = super().deserialize(data, hashmap)
         try:
+            self.tagEdit.setText(data.get("tag", "cam1"))
             return True & res  # Combine the result with superclass deserialization result
         except Exception as e:
             dumpException(e)  # Log the exception for debugging
@@ -163,7 +175,11 @@ class VibNode_ImportImages(VibNode):
         if self.scene.filename:
             self.resultFolder = os.path.join(os.path.dirname(self.scene.filename),
                                             os.path.splitext(os.path.basename(self.scene.filename))[0])
-            self.folderName = os.path.join(self.resultFolder, "ImportImages_" + str(self.id))
+            
+            tag = self.content.tagEdit.text().strip() or "cam1"
+
+            self.folderName = os.path.join(self.resultFolder,f"ImportImages_{tag}_{self.id}")
+            
             self.createFolder(self.folderName)  # Create a folder for imported images
 
             # Run the image import process
@@ -204,7 +220,10 @@ class VibNode_ImportImages(VibNode):
         # Set up the result folder path based on the scene filename
         self.resultFolder = os.path.join(os.path.dirname(self.scene.filename),
                                          os.path.splitext(os.path.basename(self.scene.filename))[0])
-        self.folderName = os.path.join(self.resultFolder, "ImportImages_" + str(self.id))
+        
+        tag = self.content.tagEdit.text().strip() or "cam1"
+
+        self.folderName = os.path.join(self.resultFolder,f"ImportImages_{tag}_{self.id}")
 
         # Define the expected output JSON file path
         self.outputName = os.path.join(self.folderName, 'imagesNames.json')

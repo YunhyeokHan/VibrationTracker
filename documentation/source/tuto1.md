@@ -5,7 +5,7 @@
 - **Image Acquisition**: A smartphone camera (iPhone X) was used in slow-motion mode.
 - **Experiment Setup**: A beam with targets attached to its surface was fixed at one end and vibrated manually from the fixed side.
 - **Data**: 130 sequential images are available in the example folder: `./images/beam`. 
-- This dataset `beam` can be downloaded using repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15573703.svg)](https://doi.org/10.5281/zenodo.15573703)
+- This dataset `beam` can be downloaded using repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22232468.svg)](https://doi.org/10.5281/zenodo.22232468)
 
 
 
