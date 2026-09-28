@@ -10,7 +10,7 @@ This tutorial demonstrates 3D displacement measurement using a stereo camera sys
 - **Cameras**: Two Vieworks VC-12MX cameras with 35 mm lenses.
 - **Experiment**: A timber structure with aluminum connections is tested on a vibration table. Markers are attached to parts of the structure, and the table excites the structure horizontally.
 - **Data**: 100 sequential images are captured per camera. Calibration data (chessboard pattern) is also acquired. For computational efficiency, all images are resized to 1280 x 1024 pixels.
-- This dataset `assembly_resized` can be downloaded using repository  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15573703.svg)](https://doi.org/10.5281/zenodo.15573703)
+- This dataset `assembly_resized` can be downloaded using repository  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22232468.svg)](https://doi.org/10.5281/zenodo.22232468)
   Data is located in `./images/assembly_resized`:
   - **Camera 1 (CAM1)**:  
     - Calibration: `./images/assembly_resized/V1/calibration`  

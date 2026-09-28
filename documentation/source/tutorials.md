@@ -12,11 +12,14 @@
 
 [Tutorial 3: Full-Field Measurement Using 2D DIC with Single Camera and Scale Factor](./tuto3.md)
 
+## Tutorial 4.
 
+[Tutorial 4: Measurement of displacement and strain with Digital Image Correlation (mono and stereovision)](./tuto4.md)
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 
 tuto1.md
 tuto2.md
 tuto3.md
+tuto4.md

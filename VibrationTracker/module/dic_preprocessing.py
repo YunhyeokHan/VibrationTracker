@@ -1,49 +1,44 @@
 import json
 import cv2
-import os, sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QListWidgetItem, QWidget, QLabel
-
+import os
+from PyQt5.QtWidgets import  QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,  QWidget, QLabel
+from shapely.geometry import Polygon as ShapelyPolygon
+from shapely.ops import unary_union
 import numpy as np
 import matplotlib.pyplot as plt
-
 try:
     from VibrationTracker.module.target_initialization import InitializeTarget
 except ModuleNotFoundError:
     from target_initialization import InitializeTarget
-
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.path import Path
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
-
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.patches import Polygon
 
 class PreprocessDIC(InitializeTarget):
-
+   
     def __init__(self, imagePath=None, calibPath=None):
         super().__init__(imagePath, calibPath)
-        
+
         self.colors = np.random.rand(100, 3)
+        self.gridNx = 10
+        self.gridNy = 10
 
 
     def initUI(self):
         self.figure, self.ax = plt.subplots()
 
         self.canvas = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar(self.canvas, self)  # Add interactive toolbar for zoom and pan
+        self.toolbar = NavigationToolbar(self.canvas, self) # Add interactive toolbar for zoom and pan
 
         self.cid = []
         self.current_points = []
-        self.polygon_list = []  # List to store all polygons
+        self.polygon_list = [] #List to store all polygons
 
         main_layout = QHBoxLayout()
-
         # Left side: Matplotlib figure and buttons
         left_widget = QWidget()
         left_layout = QVBoxLayout()
-
-
-
+        
         # Buttons
         button_layout = QHBoxLayout()
         self.add_polygon_mode_button = QPushButton("Add Polygon")
@@ -60,7 +55,7 @@ class PreprocessDIC(InitializeTarget):
         left_layout.addWidget(self.toolbar)
         left_layout.addWidget(self.canvas, stretch=1)
         left_widget.setLayout(left_layout)
-
+        
         # Right side: List of polygons and actions
         right_widget = QWidget()
         right_layout = QVBoxLayout()
@@ -85,7 +80,6 @@ class PreprocessDIC(InitializeTarget):
         self.confirm_button.clicked.connect(self.confirmSelection)
 
         right_layout.addWidget(QLabel("Selected Polygons:"))
-
         right_layout.addWidget(self.polygon_list_widget, stretch=1)
         right_layout.addWidget(self.clear_last_point_button)
         right_layout.addWidget(self.reset_points_button)
@@ -95,16 +89,29 @@ class PreprocessDIC(InitializeTarget):
         right_layout.addWidget(self.confirm_button)
 
         right_widget.setLayout(right_layout)
-
+        
         # Combine layouts
         main_layout.addWidget(left_widget, stretch=2)
         main_layout.addWidget(right_widget, stretch=1)
-
+        
         # Set the main widget
         container = QWidget()
         container.setLayout(main_layout)
         self.setCentralWidget(container)
         self.refreshFigure()
+
+    def readDICPreprocessResults(self, filepath):
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+        return data
+
+    #create the folder        
+    def createResultFolder(self, index = 0):
+        currentWorkingDir = os.path.dirname(os.path.dirname(self.filePath))
+        resultFolderPath = os.path.join(currentWorkingDir, "DIC_preprocess_" + str(index))
+        if not os.path.exists(resultFolderPath):
+            os.makedirs(resultFolderPath)
+        return resultFolderPath
 
     def activateAddPolygonMode(self):
         """
@@ -145,59 +152,45 @@ class PreprocessDIC(InitializeTarget):
 
     def onMouseClick(self, event):
         """ Handles mouse clicks to select polygon vertices. """
-        if event.button == 3:  # Right mouse button
+        if event.button == 3: # Right mouse button
             current_polygon_index = len(self.polygon_list)
             point = (event.xdata, event.ydata)
             if point[0] is not None and point[1] is not None:
                 self.current_points.append(point)
-            # If the polygon is closed, add it to the list
+            # If the polygon is closed, add it to the list    
             if hasattr(self, "temp_polygon") and self.temp_polygon in self.ax.patches:
                 self.temp_polygon.remove()
-            
             # Draw the polygon on the image
             if len(self.current_points) > 2:
                 color = self.colors[current_polygon_index]
+                self.temp_polygon = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=0.3)
+                self.ax.add_patch(self.temp_polygon) #add new polygon
                 
-                if self.current_mode == "add":
-                    self.temp_polygon = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=0.3)
-                else:
-                    self.temp_polygon = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=0.3)
-                self.ax.add_patch(self.temp_polygon)  # 새 폴리곤 추가
-            
             # draw the selected points
             self.ax.plot(point[0], point[1], 'bo')  # Blue points for selection
-            
             # Draw the polygon on the image
             self.canvas.draw()
 
-
-
     def addPolygonToList(self):
-        current_polygon_index = len(self.polygon_list)
         """ Adds the currently selected polygon to the list and displays it. """
+        current_polygon_index = len(self.polygon_list)
+
         if len(self.current_points) < 3:
             print("At least 3 points are needed for a polygon.")
             return
 
         polygon_data = {"type": self.current_mode, "points": self.current_points}
         self.polygon_list.append(polygon_data)
-
         # Display in the list
         polygon_type = "Add" if self.current_mode == "add" else "Subtract"
         item_text = f"{polygon_type} Polygon - {len(self.current_points)} Points"
         self.polygon_list_widget.addItem(item_text)
-
         # Draw the polygon on the image
-
         color = self.colors[current_polygon_index]
-        if self.current_mode == "add":
-            polygon_patch = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=0.3)
-        else:
-            polygon_patch = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=1)
+        polygon_patch = Polygon(self.current_points, closed=True, edgecolor=color, facecolor=color, alpha=0.3)
         self.ax.add_patch(polygon_patch)
         self.resetPoints()
         self.canvas.draw()
-
         # Reset current selection
         self.deactivateOtherModes()
 
@@ -224,9 +217,7 @@ class PreprocessDIC(InitializeTarget):
         """ Removes all polygons from the list and clears the image. """
         self.polygon_list.clear()
         self.polygon_list_widget.clear()
-        # self.ax.patches = []
         self.refreshFigure()
-
         self.canvas.draw()
 
     def refreshFigure(self):
@@ -239,123 +230,189 @@ class PreprocessDIC(InitializeTarget):
         # Redraw all existing polygons
         for current_polygon_index, polygon_data in enumerate(self.polygon_list):
             color = self.colors[current_polygon_index]
-            if polygon_data["type"] == "add":
-                polygon_patch = Polygon(polygon_data["points"], closed=True, edgecolor=color, facecolor=color, alpha=0.3)    
-                self.ax.add_patch(polygon_patch)
-
-            else:
-                polygon_patch = Polygon(polygon_data["points"], closed=True, edgecolor=color, facecolor=color, alpha=0.5)
-                self.ax.add_patch(polygon_patch)
-
+            polygon_patch = Polygon(polygon_data["points"], closed=True, edgecolor=color, facecolor=color, alpha=0.3)
+            self.ax.add_patch(polygon_patch)
         # Draw current selected points
-        for idx, point in enumerate(self.current_points):
+        for point in self.current_points:
             self.ax.plot(point[0], point[1], 'bo')
-
         self.canvas.draw()
 
     def confirmSelection(self):
-        """ Outputs the final list of ROIs. """
-        print("Final ROI List:", self.polygon_list)
+        """ Outputs the final list of ROIs. 2 modes : polygon ROI to draw subset 
+        inside the polygon or Mesh mode to draw a grid with defined column and lign"""
+
+        print("confirmSelection start")
     
-        valid_points =  self.createMeshGrid(self.polygon_list, self.calibResult, meshSize=self.meshSize, stepSize=self.stepSize)
-
-        self.saveDICPreprocessResults(valid_points, self.meshSize, self.resultFolder)
-
+        if self.type == "Polygon ROI":
+    
+            print("Polygon ROI mode")
+    
+            valid_points = self.createMeshGridPolygon(
+                self.polygon_list,
+                meshSize=self.meshSize,
+                stepSize=self.stepSize
+            )
+    
+        else:
+    
+            print("Mesh mode")
+    
+            valid_points = self.createMeshGrid(
+                self.polygon_list,
+                meshSize=self.meshSize,
+                gridNx=self.gridNx,
+                gridNy=self.gridNy
+            )
+    
+        print("nb points =", len(valid_points))
+    
+          
+        self.saveDICPreprocessResults(
+            valid_points,
+            self.meshSize,
+            self.resultFolder
+        )
+        
         self.close()
-
-
-
-    def createMeshGrid(self, roi_data, calibResult=None, meshSize=21, stepSize=10):
-        """
-        Generates a uniform mesh grid within the specified ROI while ensuring each mesh cell is fully contained
-        in the "add" regions and does not overlap with "subtract" regions.
-
-        Parameters:
-        - roi_data (list): A list of dictionaries containing polygon data with keys:
-            - "type": "add" (for inclusion) or "subtract" (for exclusion)
-            - "points": List of (x, y) coordinates defining the polygon
-        - calibResult (tuple, optional): Camera calibration parameters (camera matrix, distortion coefficients).
-        - meshSize (int, optional): Size of each mesh cell (default is 21).
-        - stepSize (int, optional): Distance between mesh points (default is 10).
-
-        Returns:
-        - np.ndarray: Array of valid points (N, 2) where each row is (x, y).
-        """
-
-        # Load and undistort the image if calibration parameters are provided
-        img = cv2.imread(self.image_path)
-        if calibResult is not None:
-            img = self.undistortImage(img, calibResult[0], calibResult[1])
-
-        # Find the bounding box that encompasses all "add" polygons
-        all_vertices = np.vstack([np.array(roi["points"]) for roi in roi_data if roi["type"] == "add"])
-        x_min, x_max = np.ceil(np.min(all_vertices[:, 0])), np.floor(np.max(all_vertices[:, 0]))
-        y_min, y_max = np.ceil(np.min(all_vertices[:, 1])), np.floor(np.max(all_vertices[:, 1]))
-
-        # Generate a grid of points within the bounding box using the specified step size
-        x = np.arange(x_min, x_max, stepSize)
-        y = np.arange(y_min, y_max, stepSize)
-        xx, yy = np.meshgrid(x, y)
-        points = np.vstack([xx.ravel(), yy.ravel()]).T  # Convert to (N, 2) array of points
-
-        halfMeshSize = (meshSize - 1) // 2  # Half-size of the mesh cells
-
-        def is_rectangle_inside_polygon(center, polygon, flag="all"):
-            """
-            Checks if the rectangle centered at `center` with size `meshSize` fits entirely within `polygon`.
-            """
-            x, y = center
-            leftcorner = (x - halfMeshSize, y - halfMeshSize)
-            rightcorner = (x + halfMeshSize, y + halfMeshSize)
-            # Check if all points of the rectangle are inside the polygon
-            x_grid = np.linspace(leftcorner[0], rightcorner[0], int(2*halfMeshSize+1))
-            y_grid = np.linspace(leftcorner[1], rightcorner[1], int(2*halfMeshSize+1))
-            grid = np.meshgrid(x_grid, y_grid)
-
-            rect_vertices = np.array([grid[0].flatten(), grid[1].flatten()]).T
-            if flag == "all":   
-                return np.all(polygon.contains_points(rect_vertices))
-            else:
-                return np.any(polygon.contains_points(rect_vertices))
-
-      
-
-        # Step 1: Keep only mesh squares fully inside "add" polygons
-        valid_points = []
-        for roi in roi_data:
-            if roi["type"] == "add":
-                add_polygon = Path(np.array(roi["points"]))
-                for point in points:
-                    if is_rectangle_inside_polygon(point, add_polygon):
-                        valid_points.append(point)
-
-        valid_points = np.array(valid_points)  # Convert to numpy array
-
-        # Step 2: Remove mesh squares that overlap with "subtract" polygons
-        filtered_points = []
-        for point in valid_points:
-            keep = True
-            for roi in roi_data:
-                if roi["type"] == "subtract":
-                    subtract_polygon = Path(np.array(roi["points"]))
-                    if is_rectangle_inside_polygon(point, subtract_polygon, flag='any'):
-                        keep = False
-                        break
-            if keep:
-                filtered_points.append(point)
-
-        return np.array(filtered_points)  # Return the final set of valid mesh points
-
-
-
-
-    def createResultFolder(self, index = 0):
-        currentWorkingDir = os.path.dirname(os.path.dirname(self.filePath))
-        resultFolderPath = os.path.join(currentWorkingDir, "DIC_preprocess_" + str(index))
-        if not os.path.exists(resultFolderPath):
-            os.makedirs(resultFolderPath)
-        return resultFolderPath
     
+        print("closed")
+        
+
+    #Outputs the final list of ROIs. 2 modes : polygon ROI to draw subset inside 
+    #the polygon or Mesh mode to draw a grid with defined column and lign"
+
+    def createMeshGrid(self,roi_data,meshSize=31,gridNx=10,gridNy=10):
+  
+        gridNx = int(gridNx)
+        gridNy = int(gridNy)
+    
+        add_polygons = [roi for roi in roi_data if roi["type"] == "add"]
+    
+        if len(add_polygons) == 0:
+            return np.zeros((0, 2))
+    
+        pts = np.array(add_polygons[0]["points"], dtype=float)
+    
+        if pts.shape[0] != 4:
+            raise ValueError(
+                "(This methode need a polygon with 4 vertex)."
+            )
+    
+        P0 = pts[0]   # top left
+        P1 = pts[1]   # top right
+        #P2 = pts[2]   # bottom right
+        P3 = pts[3]   # bottom left
+    
+        # horizontale direction 
+        u = P1 - P0
+        Lx = np.linalg.norm(u)
+        u = u / Lx
+    
+        # verticale direction 
+        v = P3 - P0
+        Ly = np.linalg.norm(v)
+        v = v / Ly
+    
+        # automatic calculated step
+        stepX = Lx / max(gridNx - 1, 1)
+        stepY = Ly / max(gridNy - 1, 1)
+    
+        points = []
+    
+        for iy in range(gridNy):
+            for ix in range(gridNx):
+    
+                point = (
+                    P0
+                    + ix * stepX * u
+                    + iy * stepY * v
+                )
+    
+                points.append(point)
+    
+        points = np.array(points)
+    
+    
+        return points
+    
+    def createMeshGridPolygon(self,roi_data, meshSize=21, stepSize=10,minOverlap=0.8):
+    
+        half = (meshSize - 1) / 2.0
+    
+        add_shapes = [
+            ShapelyPolygon(np.array(roi["points"]))
+            for roi in roi_data
+            if roi["type"] == "add"
+        ]
+    
+        if not add_shapes:
+            return np.zeros((0, 2))
+    
+        roi_poly = unary_union(add_shapes)
+    
+        sub_shapes = [
+            ShapelyPolygon(np.array(roi["points"]))
+            for roi in roi_data
+            if roi["type"] == "subtract"
+        ]
+    
+        if sub_shapes:
+            roi_poly = roi_poly.difference(
+                unary_union(sub_shapes)
+            )
+    
+        minx, miny, maxx, maxy = roi_poly.bounds
+    
+        xs = np.arange(minx, maxx + stepSize, stepSize)
+        ys = np.arange(miny, maxy + stepSize, stepSize)
+    
+        square_area = meshSize * meshSize
+    
+        points = []
+    
+        for y in ys:
+            for x in xs:
+    
+                square = ShapelyPolygon([
+                    (x-half, y-half),
+                    (x+half, y-half),
+                    (x+half, y+half),
+                    (x-half, y+half)
+                ])
+    
+                overlap = roi_poly.intersection(square).area
+    
+                if overlap / square_area >= minOverlap:
+                    points.append([x, y])
+    
+        return np.array(points)  
+    
+
+    # Draw the windows on the image
+    def draw_windows(self, centers, meshSize, edgecolor="yellow", lw=1.2):
+        half = (meshSize - 1) / 2.0
+
+        for (x, y) in centers:
+        
+            corners = np.array([
+                [x-half, y-half],
+                [x+half, y-half],
+                [x+half, y+half],
+                [x-half, y+half]
+            ])
+        
+            poly = Polygon(
+                corners,
+                fill=False,
+                edgecolor=edgecolor,
+                linewidth=lw
+            )
+        
+            self.ax.add_patch(poly)
+            
+
+    
+    # Save the data
     def saveDICPreprocessResults(self, posTrack, meshSize, resultFolderPath):
         self.outputName = os.path.join(resultFolderPath, 'DICpreprocessResults.json')
         posTrack = posTrack.tolist()
@@ -363,26 +420,3 @@ class PreprocessDIC(InitializeTarget):
         with open(self.outputName, 'w') as f:
             json.dump(dicpreprocessingResults, f)
         return self.outputName
-    
-    def readDICPreprocessResults(self, jsonPath):
-        with open(jsonPath) as f:
-            dicpreprocessingResults = json.load(f)
-        return dicpreprocessingResults
-    
-
-if __name__ == '__main__':
-
-    app = QApplication(sys.argv)
-
-    imagePath = r"example_assemblage\ImportImages_2636550566624\imagesNames.json"
-    calibPath = r'example_assemblage\CalibrateCamera_2636435126976\calibrationResults.json'
-
-    preprocessDIC = PreprocessDIC(imagePath, calibPath)
-
-    preprocessDIC.resultFolder = preprocessDIC.createResultFolder(index=0)
-    preprocessDIC.meshSize = 21
-    preprocessDIC.stepSize = 10
-    preprocessDIC.show()
-
-    # mesh grid for DIC
-    sys.exit(app.exec_())

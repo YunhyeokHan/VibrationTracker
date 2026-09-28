@@ -1,0 +1,213 @@
+{
+    "id": 2636412051072,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 3003408758768,
+            "title": "Preprocess DIC",
+            "pos_x": 720.4843749999998,
+            "pos_y": 140.03125,
+            "inputs": [
+                {
+                    "id": 3003535616368,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 3003535616416,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 3003535616464,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                },
+                {
+                    "id": 3003535616512,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "tag": "dicprep_2"
+            },
+            "op_code": 13
+        },
+        {
+            "id": 1942463491808,
+            "title": "Process DIC",
+            "pos_x": 1269.0,
+            "pos_y": -4.0625,
+            "inputs": [
+                {
+                    "id": 1942465063232,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1942465063280,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1942465063328,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 1942465063376,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 1942465063424,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1942465063472,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "dic2d"
+            },
+            "op_code": 14
+        },
+        {
+            "id": 2353758055776,
+            "title": "Import Images",
+            "pos_x": 303.12499999999994,
+            "pos_y": 129.68749999999997,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2353759801152,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "tag": "cam1"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 2650450109584,
+            "title": "Postprocess DIC",
+            "pos_x": 1680.0,
+            "pos_y": 21.25,
+            "inputs": [
+                {
+                    "id": 2650618320352,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                },
+                {
+                    "id": 2650618321312,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2650618320736,
+                    "index": 2,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 3
+                },
+                {
+                    "id": 2650618321168,
+                    "index": 3,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                },
+                {
+                    "id": 2650618322752,
+                    "index": 4,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 4
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2650618319152,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "resultFolder": "C:\\Users\\julien.archez\\Documents\\python\\VibrationTracker-main\\tutorials\\monovision\\DIC_postprocessing2650450109584"
+            },
+            "op_code": 15
+        }
+    ],
+    "edges": [
+        {
+            "id": 1942467045312,
+            "edge_type": 5,
+            "start": 3003535616464,
+            "end": 1942465063328
+        },
+        {
+            "id": 2353765839536,
+            "edge_type": 5,
+            "start": 2353759801152,
+            "end": 3003535616368
+        },
+        {
+            "id": 2353765839632,
+            "edge_type": 5,
+            "start": 2353759801152,
+            "end": 1942465063232
+        },
+        {
+            "id": 2650618319056,
+            "edge_type": 5,
+            "start": 1942465063472,
+            "end": 2650618320736
+        },
+        {
+            "id": 2650618319488,
+            "edge_type": 5,
+            "start": 2353759801152,
+            "end": 2650618320352
+        }
+    ]
+}

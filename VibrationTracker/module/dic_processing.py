@@ -1,8 +1,7 @@
 import json
 import cv2
-import os, sys
+import os
 import PyQt5.QtWidgets as QtGui
-from PyQt5.QtWidgets import QApplication
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -19,7 +18,9 @@ def function_star(args):
 def process_imageCurrent_star(ind_subset, pt_init, curImg, subset, dfdp, Hessian_inv, meshsize, searchSize, dicProcessing):
 
     curImgSearch, startPoint = dicProcessing.findSearchImg(curImg, pt_init, meshsize, searchSize)
-    interpG = dicProcessing.findInterpolation(curImgSearch, "Bicubic", grad=False)
+    curImgSearch = np.asarray(curImgSearch, dtype=np.float64)
+    interpG = dicProcessing.findInterpolation(curImgSearch, dicProcessing.interpType, grad=False)
+
     # Current position of the target
     point_search = pt_init - startPoint
 
@@ -28,75 +29,76 @@ def process_imageCurrent_star(ind_subset, pt_init, curImg, subset, dfdp, Hessian
     p_old = dicProcessing.guessInitialP0(subset, curImgSearch, point_search, meshsize)
     # Iterate to refine p
     p_result = dicProcessing.iterate_subset_tracking(p_old, subset, dfdp, Hessian_inv, interpG, point_search, meshsize)
-
+    
     return p_result, ind_subset
 
 class ProcessDIC(TrackTarget):
 
-    def findInterpolation(self, image, interpType, grad = True):
-        def findGradient(interpF, X_coord, Y_coord):
-            # find the gradient of the image
-            dIdx = interpF(Y_coord, X_coord, dx=0, dy=1)
-            dIdy = interpF(Y_coord, X_coord, dx=1, dy=0)
-            gradient = np.stack((dIdx, dIdy), axis=-1)
-            return gradient
-                
-        X_coord = np.arange(0, image.shape[1], 1)
-        Y_coord = np.arange(0, image.shape[0], 1)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.interpType = "Bicubic"  # ou "Bilinear"
+
+    def findInterpolation(self, image, interpType, grad=True):
+        image = np.asarray(image, dtype=np.float64)
+    
+        X = np.arange(image.shape[1], dtype=float)
+        Y = np.arange(image.shape[0], dtype=float)
+    
         if interpType == "Bicubic":
-            interpF = interp.RectBivariateSpline(Y_coord, X_coord, image, kx=3, ky=3)
+            interpF = interp.RectBivariateSpline(Y, X, image, kx=3, ky=3)
         elif interpType == "Bilinear":
-            interpF = interp.RectBivariateSpline(Y_coord, X_coord, image, kx=1, ky=1)
-        # find the gradient of the image
-        if grad == True:
-            gradient = findGradient(interpF,X_coord,Y_coord)
-            return interpF, gradient
+            interpF = interp.RectBivariateSpline(Y, X, image, kx=1, ky=1)
         else:
-            return interpF
-        
-        
+            interpF = interp.RectBivariateSpline(Y, X, image, kx=3, ky=3)
+    
+        # IMPORTANT: ne pas calculer de gradient ici (ça fait planter pardeu/parder=10)
+        if grad:
+            return interpF, None
+        return interpF
+
+            
     def findSteepestDescent(self, point, gradient, meshsize, interpF):
-        # find the steepest descent images
-        # gradient [dIdx, dIdy]
         # point [x, y]
-        # meshsize 51
-        # if all points are in the integer
-        # if abs(point[0]%1)  < 1e-6 and abs(point[1]%1)  < 1e-6:
-        #     X_coord = np.linspace(point[0] - (meshsize-1)//2, point[0] + (meshsize-1)//2, meshsize).astype(int)
-        #     Y_coord = np.linspace(point[1] - (meshsize-1)//2, point[1] + (meshsize-1)//2, meshsize).astype(int)
-        #     coord = np.meshgrid(X_coord, Y_coord)
-
-        #     coord_x = coord[0].flatten()
-        #     coord_y = coord[1].flatten()
-
-        #     # find the steepest descent images
-        #     dfdx = gradient[coord_y, coord_x, 0].reshape(meshsize, meshsize)
-            # dfdy = gradient[coord_y, coord_x, 1].reshape(meshsize, meshsize)
-
-
         X_coord = np.linspace(point[0] - (meshsize-1)//2, point[0] + (meshsize-1)//2, meshsize)
         Y_coord = np.linspace(point[1] - (meshsize-1)//2, point[1] + (meshsize-1)//2, meshsize)
-        coord = np.meshgrid(X_coord, Y_coord)
-
-        coord_x = coord[0].flatten()
-        coord_y = coord[1].flatten()
-
-        # find the steepest descent images
-        dfdx = interpF(coord_y, coord_x, dx=0, dy=1, grid = False).reshape(meshsize, meshsize)
-        dfdy = interpF(coord_y, coord_x, dx=1, dy=0, grid = False).reshape(meshsize, meshsize)
-
-        
-        coord_centerd = np.meshgrid(X_coord - point[0], Y_coord - point[1])
-        coord_centerd_x = coord_centerd[0]
-        coord_centerd_y = coord_centerd[1]
-
+        coord_x, coord_y = np.meshgrid(X_coord, Y_coord)
+        coord_x = coord_x.flatten()
+        coord_y = coord_y.flatten()
+    
+        # bornes valides d'interpolation
+        yk, xk = interpF.get_knots()
+        ymin, ymax = float(yk[0]), float(yk[-1])
+        xmin, xmax = float(xk[0]), float(xk[-1])
+    
+        if self.interpType == "Bilinear":
+            # dérivées par différences finies (stable)
+            eps = 1e-2
+            xp = np.clip(coord_x + eps, xmin, xmax)
+            xm = np.clip(coord_x - eps, xmin, xmax)
+            yp = np.clip(coord_y + eps, ymin, ymax)
+            ym = np.clip(coord_y - eps, ymin, ymax)
+    
+            Ixp = interpF(coord_y, xp, grid=False)
+            Ixm = interpF(coord_y, xm, grid=False)
+            Iyp = interpF(yp, coord_x, grid=False)
+            Iym = interpF(ym, coord_x, grid=False)
+    
+            dfdx = ((Ixp - Ixm) / (2 * eps)).reshape(meshsize, meshsize)
+            dfdy = ((Iyp - Iym) / (2 * eps)).reshape(meshsize, meshsize)
+        else:
+            # bicubic: OK avec dx/dy
+            dfdx = interpF(coord_y, coord_x, dx=0, dy=1, grid=False).reshape(meshsize, meshsize)
+            dfdy = interpF(coord_y, coord_x, dx=1, dy=0, grid=False).reshape(meshsize, meshsize)
+    
+        coord_centerd_x, coord_centerd_y = np.meshgrid(X_coord - point[0], Y_coord - point[1])
+    
         dfdu = dfdx
         dfdv = dfdy
-        dfdudx = dfdx*coord_centerd_x
-        dfdudy = dfdx*coord_centerd_y
-        dfdvdx = dfdy*coord_centerd_x
-        dfdvdy = dfdy*coord_centerd_y
-        # return as a meshsize x meshsize x 6 array
+        dfdudx = dfdx * coord_centerd_x
+        dfdudy = dfdx * coord_centerd_y
+        dfdvdx = dfdy * coord_centerd_x
+        dfdvdy = dfdy * coord_centerd_y
+    
         return np.stack((dfdu, dfdv, dfdudx, dfdudy, dfdvdx, dfdvdy), axis=-1)
 
     def findSubset(self, point, interpF, meshsize):
@@ -129,7 +131,6 @@ class ProcessDIC(TrackTarget):
                 Hessian[i, j] = (2/subsetVar**2)*np.sum(dfdp[:,:,i]*dfdp[:,:,j])
 
         return Hessian
-
 
     def guessInitialP0(self, subset, Img, point, meshsize):
         # find the NCC between the subset and the reference image
@@ -229,36 +230,54 @@ class ProcessDIC(TrackTarget):
         # p to matrix 
         
     def cropImage(self, image, point, meshsize):
-        halfsize = (meshsize-1)//2
-        points_int = np.floor(point).astype(int)
-        crooppedImg = image[points_int[1]-halfsize-1:points_int[1]+halfsize+2, points_int[0]-halfsize-1:points_int[0]+halfsize+2]
-        # point_coord in crooppedImg
-        point_coord_int = [halfsize+1, halfsize+1]
-        point_coord = point - points_int + point_coord_int
-        return crooppedImg, point_coord
+        half = (meshsize - 1) // 2
+        pad = half + 2  # marge pour tes slices + dérivées
     
-
+        imgp = cv2.copyMakeBorder(image, pad, pad, pad, pad, borderType=cv2.BORDER_REFLECT_101)
+    
+        p_int = np.floor(point).astype(int)
+        p_int_pad = p_int + pad
+    
+        y0 = p_int_pad[1] - half - 1
+        y1 = p_int_pad[1] + half + 2
+        x0 = p_int_pad[0] - half - 1
+        x1 = p_int_pad[0] + half + 2
+    
+        cropped = imgp[y0:y1, x0:x1]
+    
+        point_coord_int = np.array([half + 1, half + 1], dtype=float)
+        point_coord = (point - p_int) + point_coord_int
+    
+        return cropped, point_coord
 
     def prepareRefenceData(self, refImg, posTrack, meshsize):
-        # print("interpolating the reference image")
-        # interpF, gradient = self.findInterpolation(refImg, "Bicubic", grad=True)
+    
         print("read reference data and caculate gradient / hessian")
         list_subset, list_dfdp, list_Hessian_inv = [], [], []
+    
         for point in tqdm(posTrack):
-            # crop the reference
+            # crop the reference (avec padding miroir)
             croppedImg, point_coord = self.cropImage(refImg, point, meshsize)
+            croppedImg = np.asarray(croppedImg, dtype=np.float64)
+    
             # interpolate the cropped image
-            interpF, gradient = self.findInterpolation(croppedImg, "Bicubic", grad=True)
-            # find the subset, dfdp, Hessian_inv            
+            interpF, _ = self.findInterpolation(croppedImg, self.interpType, grad=True)
+    
+            # subset reference
             subset = self.findSubset(point_coord, interpF, meshsize)
-
-            dfdp = self.findSteepestDescent(point_coord, gradient, meshsize, interpF)
+    
+            # steepest descent (gradient calculé par dérivées spline)
+            dfdp = self.findSteepestDescent(point_coord, None, meshsize, interpF)
+    
+            # Hessian
             Hessian = self.findHessian(subset, dfdp)
+    
             list_subset.append(subset)
             list_dfdp.append(dfdp)
             list_Hessian_inv.append(np.linalg.inv(Hessian))
-
+    
         return list_subset, list_dfdp, list_Hessian_inv
+
 
     def findSearchImg(self, curImg, point, meshsize, searchSize):
         
@@ -302,7 +321,6 @@ class ProcessDIC(TrackTarget):
             TrackResults_image: Tracking results for the current image.
         """
         TrackResults_image = np.zeros((len(posTrack), 2))  # Assuming 2 coordinates to track
-
         input_list = []
         # create input list for multiprocessing    
         for ind_subset in range(len(posTrack)):
@@ -326,11 +344,12 @@ class ProcessDIC(TrackTarget):
         pool.close()
         pool.join()
         
-        index_list = []
         for i in range(len(results)):
-            TrackResults_image[results[i][1],:] = results[i][0][0:2] + pts_init[i, :]
-            pts_init[results[i][1], :] = np.round([TrackResults_image[i,0], TrackResults_image[i,1]]).astype(int)
-            index_list.append(results[i][1])
+            p_result = results[i][0]
+            ind_subset = results[i][1]
+            TrackResults_image[ind_subset,:] = p_result[0:2] + pts_init[ind_subset,:]
+            
+            pts_init[ind_subset,:] = np.round([TrackResults_image[ind_subset,0], TrackResults_image[ind_subset,1]]).astype(int)
 
         return pts_init, TrackResults_image
 
@@ -355,25 +374,182 @@ class ProcessDIC(TrackTarget):
             Final transformation parameters after convergence (p_result).
         """
         p_result, min_norm = np.zeros(6), 1e12
-
+        
+        
         for ind_iter in range(max_iter):
+        
             subsetCurrent = self.findCurrentSubset(interpG, p_old, point_search, meshsize)
             gradientCurrent, znssd = self.findCurrentGradient(subset, subsetCurrent, dfdp)
+        
+            
+        
             p_delta = self.findDeltaP(gradientCurrent, Hessian_inv)
             p_new = self.updateTransformation(p_old, p_delta)
-
+        
             p_old = p_new
             p_delta_norm = np.linalg.norm(p_delta)
-
+        
             if p_delta_norm < min_norm:
                 p_result = p_new
                 min_norm = p_delta_norm
-
+                
+        
             if abs(p_delta_norm - min_norm) < tol:
                 break
-
+        
         return p_result
+    
+#one core    
+    def trackTarget_DIC(self, imageNames, posTrack, resultFolderPath, winsize = 5, search = 5, calibResult = None, update = True, show = True, reinitialize = False):
 
+        print("Tracking target using Digital Image Correlation")
+        print("Parameters: ")
+        print("winsize: ", winsize)
+        print("update: ", update)
+        print("show: ", show)
+        print("Calibration: ", calibResult)
+        print("Result folder: ", resultFolderPath)
+
+        p0 = np.array(posTrack).reshape(-1,2)
+        num_points = p0.shape[0]
+        num_images = len(imageNames)
+
+        # Create some random colors
+        color = np.random.randint(0, 255, (num_points, 3))
+
+        # Take the first frame and find corners in it
+        old_frame = cv2.imread(imageNames[0])
+
+        if calibResult is not None:
+            cameraMatrix, distortionCoefficients = calibResult
+            old_frame = self.undistortImage(old_frame, cameraMatrix, distortionCoefficients)
+        
+        
+        # Create a mask image for drawing purposes
+        mask = np.zeros_like(old_frame)
+        
+        old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+
+
+        height, width = old_gray.shape
+
+        X_all = np.arange(0, width,1)
+        Y_all = np.arange(0, height,1)
+
+        kxky = (3, 3) if self.interpType == "Bicubic" else (1, 1)
+        f_all = interp.RectBivariateSpline(
+            Y_all, X_all, old_gray.astype(np.float64),
+            kx=kxky[0], ky=kxky[1]
+        )
+        # set up the first frame and the first points with reference subsets
+
+        # p_array = np.zeros((6, num_points, num_images))
+        TrackResults = np.zeros((num_images, num_points, 2))
+        p0_init = p0
+        for ind_image in tqdm(range(0, num_images)):
+            
+            if calibResult is not None:
+                frame = self.undistortImage(cv2.imread(imageNames[ind_image]), cameraMatrix, distortionCoefficients)
+            else:
+                frame = cv2.imread(imageNames[ind_image])
+            
+            gray_current = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            if reinitialize == True:
+                p1, points_init = self.calDIC(f_all, gray_current, p0, mesh_size=(winsize-1)//2, pts_init = p0_init, search = search)
+            else:
+                p1, points_init = self.calDIC(f_all, gray_current, p0, mesh_size=(winsize-1)//2, search = search)
+            
+            p0_init = points_init
+
+            good_new = p1
+            good_old = p0
+
+
+            # Draw the tracks
+            for i, (new, old) in enumerate(zip(good_new, good_old)):
+                a, b = new.ravel().astype(int)
+                c, d = old.ravel().astype(int)
+                mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
+                frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
+            img = cv2.add(frame, mask)
+
+            if show == True:
+                img = cv2.resize(img, (800, 600))
+                cv2.imshow('frame', img)
+                k = cv2.waitKey(30) & 0xff
+                if k == 27:
+                    break
+
+            if update == True:
+                p0 = good_new
+                f_all = interp.RectBivariateSpline(
+                Y_all, X_all, gray_current.astype(np.float64),
+                kx=kxky[0], ky=kxky[1]
+            )
+
+            TrackResults[ind_image] = p1.reshape(-1, 2)
+            self.saveTrackingResult(TrackResults[ind_image], resultFolderPath, ind_image)
+
+        cv2.destroyAllWindows()  
+        
+#multiprocess 2D        
+    def trackTarget_DICMP(self, imageNames, posTrack, resultFolderPath, meshsize, searchSize, calibResult = None, update = True, show = True, numProcess = 8):
+            
+        num_points = posTrack.shape[0]
+        num_images = len(imageNames)
+
+        # Create some random colors
+        color = np.random.randint(0, 255, (num_points, 3))
+        # Take the first frame and find corners in it
+        old_frame = cv2.imread(imageNames[0])
+
+        if calibResult is not None:
+            cameraMatrix, distortionCoefficients = calibResult
+            old_frame = self.undistortImage(old_frame, cameraMatrix, distortionCoefficients)
+        
+        old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+
+        mask = np.zeros_like(old_frame)
+        print("preparing reference data")
+        list_subset, list_dfdp, list_Hessian_inv = self.prepareRefenceData(old_gray, posTrack, meshsize)
+
+        # initialize the initial points
+        pts_init = np.round(posTrack.copy()).astype(int)
+
+        TrackResults = np.zeros((len(imageNames), len(pts_init), 2))
+        for ind_image in tqdm(range(0,num_images,1)):
+            # read the current image
+            curImg = cv2.imread(imageNames[ind_image], cv2.IMREAD_GRAYSCALE)
+            if calibResult is not None:
+                curImg = self.undistortImage(curImg, cameraMatrix, distortionCoefficients)
+            # iteration with the different subset
+            pts_init, TrackResults[ind_image] = self.process_imageCurrent(curImg, posTrack, pts_init, list_subset, list_dfdp, list_Hessian_inv, meshsize, searchSize, numProcess)
+            if show == True:
+                frame = cv2.cvtColor(curImg, cv2.COLOR_GRAY2BGR)
+
+                good_old = TrackResults[ind_image]
+                good_new = pts_init
+                print("good_old: ", good_old.shape)
+                print("good_new: ", good_new.shape)
+
+                # Draw the tracks
+                for i, (new, old) in enumerate(zip(good_new, good_old)):
+                    a, b = new.ravel().astype(int)
+                    c, d = old.ravel().astype(int)
+                    mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
+                    frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
+                img = cv2.add(frame, mask)
+                img = cv2.resize(img, (1600, 1200))
+                cv2.imshow('frame', img)
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
+            # cv2.imwrite("frame_%04d.png" % ind_image, img)
+            self.saveTrackingResult(TrackResults[ind_image],resultFolderPath,ind_image)
+        cv2.destroyAllWindows()
+        # return TrackResults
+        
+#multiprocess3D
     def trackTarget_DICMP3D(self, imageNames1, imageNames2, posTrack, resultFolderPath, meshsize, searchSize, calibResult1, calibResult2, searchSize_twoimage, update = True, show = True, numProcess = 8):
 
         num_points = posTrack.shape[0]
@@ -392,9 +568,6 @@ class ProcessDIC(TrackTarget):
         old_frame2 = self.undistortImage(old_frame2, cameraMatrix2, distortionCoefficients2)
 
         old_gray1 = cv2.cvtColor(old_frame1, cv2.COLOR_BGR2GRAY)
-
-        imsize = old_gray1.shape
-        max_size = max(imsize)
         mask = np.zeros_like(old_frame1)
         
         print("preparing reference data")
@@ -423,7 +596,7 @@ class ProcessDIC(TrackTarget):
             else:
                 pts_init2, TrackResults2[ind_image] = self.process_imageCurrent(curImg2, posTrack, pts_init2, list_subset2, list_dfdp2, list_Hessian_inv2, meshsize, searchSize=searchSize, numProcess=numProcess)
             
-            print("image: ", ind_image, "finised")
+            print("image: ", ind_image, "finished")
             if show == True:
                 frame1 = cv2.cvtColor(curImg1, cv2.COLOR_GRAY2BGR)
                 frame2 = cv2.cvtColor(curImg2, cv2.COLOR_GRAY2BGR)
@@ -461,69 +634,6 @@ class ProcessDIC(TrackTarget):
 
             self.saveTrackingResults3D(TrackResults1[ind_image], TrackResults2[ind_image], resultFolderPath, ind_image)
         cv2.destroyAllWindows()
-
-
-
-
-
-
-    def trackTarget_DICMP(self, imageNames, posTrack, resultFolderPath, meshsize, searchSize, calibResult = None, update = True, show = True, numProcess = 8):
-            
-        num_points = posTrack.shape[0]
-        num_images = len(imageNames)
-
-        # Create some random colors
-        color = np.random.randint(0, 255, (num_points, 3))
-        # Take the first frame and find corners in it
-        old_frame = cv2.imread(imageNames[0])
-
-        if calibResult is not None:
-            cameraMatrix, distortionCoefficients = calibResult
-            old_frame = self.undistortImage(old_frame, cameraMatrix, distortionCoefficients)
-        
-        old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-
-        mask = np.zeros_like(old_frame)
-        print("preparing reference data")
-        list_subset, list_dfdp, list_Hessian_inv = self.prepareRefenceData(old_gray, posTrack, meshsize)
-
-        # initialize the initial points
-        pts_init = np.round(posTrack.copy()).astype(int)
-
-        TrackResults = np.zeros((len(imageNames), len(pts_init), 2))
-        
-        for ind_image in tqdm(range(0,num_images,1)):
-            # read the current image
-            curImg = cv2.imread(imageNames[ind_image], cv2.IMREAD_GRAYSCALE)
-            if calibResult is not None:
-                curImg = self.undistortImage(curImg, cameraMatrix, distortionCoefficients)
-            # iteration with the different subset
-            pts_init, TrackResults[ind_image] = self.process_imageCurrent(curImg, posTrack, pts_init, list_subset, list_dfdp, list_Hessian_inv, meshsize, searchSize, numProcess)
-            if show == True:
-                frame = cv2.cvtColor(curImg, cv2.COLOR_GRAY2BGR)
-
-                good_old = TrackResults[ind_image]
-                good_new = pts_init
-                print("good_old: ", good_old.shape)
-                print("good_new: ", good_new.shape)
-
-                # Draw the tracks
-                for i, (new, old) in enumerate(zip(good_new, good_old)):
-                    a, b = new.ravel().astype(int)
-                    c, d = old.ravel().astype(int)
-                    mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
-                    frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
-                img = cv2.add(frame, mask)
-                img = cv2.resize(img, (1600, 1200))
-                cv2.imshow('frame', img)
-            k = cv2.waitKey(30) & 0xff
-            if k == 27:
-                break
-            # cv2.imwrite("frame_%04d.png" % ind_image, img)
-            self.saveTrackingResult(TrackResults[ind_image], resultFolderPath, ind_image)
-        cv2.destroyAllWindows()
-        # return TrackResults
-
 
     def openFileDialog(self):
         startingDir = './'
@@ -567,7 +677,7 @@ class ProcessDIC(TrackTarget):
             os.makedirs(resultFolderPath)
         return resultFolderPath
     
-    def saveTrackingResult(self, DIC_Results, resultFolderPath, ind_images= None):
+    def saveTrackingResult(self, DIC_Results, resultFolderPath, ind_images=None):
         if ind_images is not None:
             self.outputName = os.path.join(resultFolderPath, "DIC_processing_%04d.json" % ind_images)
         else:
@@ -585,8 +695,8 @@ class ProcessDIC(TrackTarget):
         DIC_Results = {"DIC_Results1": DIC_Results1.tolist(), "DIC_Results2": DIC_Results2.tolist()}
         with open(self.outputName, 'w') as f:
             json.dump(DIC_Results, f)
-        # print("Tracking results saved in: ", self.outputName)
-
+        # print("Tracking results saved in: ", self.outputName)        
+            
     def plotTrackingResult(self, TrackResults):
         ind_points = 0
         # Plot the tracking result of the first point
@@ -613,119 +723,4 @@ class ProcessDIC(TrackTarget):
         jsonPath_all = glob.glob(DIC_path + "/*.json")
         jsonPath_all = sorted(jsonPath_all)
         return jsonPath_all
-    
-    def trackTarget_DIC(self, imageNames, posTrack, resultFolderPath, winsize = 5, search = 5, calibResult = None, update = True, show = True, reinitialize = False):
-
-        print("Tracking target using Digital Image Correlation")
-        print("Parameters: ")
-        print("winsize: ", winsize)
-        print("update: ", update)
-        print("show: ", show)
-        print("Calibration: ", calibResult)
-        print("Result folder: ", resultFolderPath)
-
-        p0 = np.array(posTrack).reshape(-1,2)
-        num_points = p0.shape[0]
-        num_images = len(imageNames)
-
-        # Create some random colors
-        color = np.random.randint(0, 255, (num_points, 3))
-
-        # Take the first frame and find corners in it
-        old_frame = cv2.imread(imageNames[0])
-
-        if calibResult is not None:
-            cameraMatrix, distortionCoefficients = calibResult
-            old_frame = self.undistortImage(old_frame, cameraMatrix, distortionCoefficients)
-        
-        
-        # Create a mask image for drawing purposes
-        mask = np.zeros_like(old_frame)
-        
-        old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-
-
-        height, width = old_gray.shape
-
-        X_all = np.arange(0, width,1)
-        Y_all = np.arange(0, height,1)
-
-        f_all = interp.RectBivariateSpline(Y_all, X_all, old_gray, kx=3, ky=3)
-
-        # set up the first frame and the first points with reference subsets
-
-        # p_array = np.zeros((6, num_points, num_images))
-        TrackResults = np.zeros((num_images, num_points, 2))
-        p0_init = p0
-        for ind_image in tqdm(range(0, num_images)):
-            
-            if calibResult is not None:
-                frame = self.undistortImage(cv2.imread(imageNames[ind_image]), cameraMatrix, distortionCoefficients)
-            else:
-                frame = cv2.imread(imageNames[ind_image])
-            
-            gray_current = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            if reinitialize == True:
-                p1, points_init = self.calDIC(f_all, gray_current, p0, mesh_size=(winsize-1)//2, pts_init = p0_init, search = search)
-            else:
-                p1, points_init = self.calDIC(f_all, gray_current, p0, mesh_size=(winsize-1)//2, search = search)
-            
-            p0_init = points_init
-
-            good_new = p1
-            good_old = p0
-
-
-            # Draw the tracks
-            for i, (new, old) in enumerate(zip(good_new, good_old)):
-                a, b = new.ravel().astype(int)
-                c, d = old.ravel().astype(int)
-                mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
-                frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
-            img = cv2.add(frame, mask)
-
-            if show == True:
-                img = cv2.resize(img, (800, 600))
-                cv2.imshow('frame', img)
-                k = cv2.waitKey(30) & 0xff
-                if k == 27:
-                    break
-
-            if update == True:
-                p0 = good_new
-                f_all = interp.RectBivariateSpline(Y_all, X_all, gray_current, kx=3, ky=3)
-            TrackResults[ind_image] = p1.reshape(-1, 2)
-            self.saveTrackingResult(TrackResults[ind_image], resultFolderPath, ind_image)
-
-        cv2.destroyAllWindows()
-    
-
-
-if __name__ == '__main__':
-
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')
-
-    processDIC = ProcessDIC()
-    # TrackTarget.filePath = TrackTarget.openFileDialog()
-    processDIC.filePath = "example_dic\ImportImages_2602045476576\imagesNames.json"
-    imagesNames = processDIC.readImageNamesFromJson(processDIC.filePath)
-    # TrackTarget.calibPath = TrackTarget.openFileDialog()
-    processDIC.calibPath = ''
-    if processDIC.calibPath == '':
-        print("Calibration file not selected")
-        calibResult = None
-    else: 
-        calibResult = processDIC.readCalibNameFromJson(processDIC.calibPath)
-    # TrackTarget.posTrackPath = TrackTarget.openFileDialog()
-    processDIC.preprocessingResultsPath = "example_dic\DIC_preprocess2956443480896\DICpreprocessResults.json"
-    posTrack, meshsize = processDIC.readDICPreprocessResults(processDIC.preprocessingResultsPath)
-
-    resultFolderPath = processDIC.createResultFolder()
-    # DIC_Results = ProcessDIC.trackTarget_DIC(imagesNames, posTrack, resultFolderPath, winsize = meshsize, search = 5, calibResult = calibResult, update = False, show = True)
-    # DIC_Results,ind_images = DIC_Multiprocessing(imagesNames, posTrack, resultFolderPath, meshsize = meshsize, search = 5, calibResult = calibResult, numProcess = 8, dicProcessing = processDIC)
-    # print("results: ", DIC_Results)
-    
-    # processDIC.plotTrackingResult(DIC_Results)
-    # sys.exit(app.exec_())
     

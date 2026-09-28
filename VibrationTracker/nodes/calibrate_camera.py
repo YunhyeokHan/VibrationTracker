@@ -32,7 +32,13 @@ class VibCalibrateCameraContent(QDMNodeContentWidget):
         # Initialize the layout as a grid layout
         self.layout = QGridLayout()
         self.layout.setContentsMargins(15, 10, 15, 10)  # Set margins for layout
-
+        
+        #}change the name of the box and folder
+        self.tagEdit = QLineEdit(self)
+        self.tagEdit.setPlaceholderText("Output name (ex: calibcam1)")
+        self.tagEdit.setText("calib")
+        self.layout.addWidget(self.tagEdit, 0, 1, 1, 2)
+        
         # Add a spacer to create some vertical space
         space = QSpacerItem(0, 40, QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.layout.addItem(space, 0, 0)
@@ -59,8 +65,9 @@ class VibCalibrateCameraContent(QDMNodeContentWidget):
             dict: Serialized data containing the widget's state.
         """
         res = super().serialize()
+        res["tag"] = self.tagEdit.text()
         return res
-
+    
     def deserialize(self, data, hashmap={}):
         """
         Deserializes the widget's state from the provided data.
@@ -74,10 +81,9 @@ class VibCalibrateCameraContent(QDMNodeContentWidget):
         """
         res = super().deserialize(data, hashmap)
         try:
-            # Ensure the deserialization process returns a valid boolean result
+            self.tagEdit.setText(data.get("tag", "calib"))
             return True & res
         except Exception as e:
-            # Handle and log any exceptions that occur during deserialization
             dumpException(e)
         return res
 
@@ -183,9 +189,11 @@ class VibNode_CalibrateCamera(VibNode):
 
         # Read image names from the JSON file
         self.imagesNames = self.calibrateCamera.readImageNamesFromJson(self.calibrateCamera.filePath)
-
+        
         # Create a folder for storing calibration results
-        self.resultFolder = self.calibrateCamera.createResultFolder(index=self.id)
+        tag = self.content.tagEdit.text().strip() or "calib"
+        self.resultFolder = self.calibrateCamera.createResultFolder(index=f"{tag}_{self.id}")
+        #self.resultFolder = self.calibrateCamera.createResultFolder(index=self.id)
 
         # Run the appropriate calibration method based on the selected pattern
         if self.configWidget.type == "Chessboard":
@@ -265,7 +273,8 @@ class VibNode_CalibrateCamera(VibNode):
             return False
         self.calibrateCamera.filePath = self.getInput(0).value
         self.imagesNames = self.calibrateCamera.readImageNamesFromJson(self.calibrateCamera.filePath)
-        self.resultFolder = self.calibrateCamera.createResultFolder(index=self.id)
+        tag = self.content.tagEdit.text().strip() or "calib"
+        self.resultFolder = self.calibrateCamera.createResultFolder(index=f"{tag}_{self.id}")
         self.outputName = os.path.join(self.resultFolder, 'calibrationResults.json')
 
         if not self.outputName:
